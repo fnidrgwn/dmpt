@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
+    <meta name="theme-color" content="#206bc4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>DompetKu v4.0 (Supabase)</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --tblr-primary: #206bc4;
+        }
+
+        body {
+            background-color: #f6f8fb;
+            padding-bottom: 100px;
+            min-height: 100vh;
+            font-family: -apple-system, sans-serif;
+        }
+
+        .header-fixed {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            background: var(--tblr-primary);
+            color: white;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .header-content {
+            padding: 1.2rem 1rem 0.8rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .stats-grid.out {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .stats-grid.in {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .stat-value.large {
+            font-size: 1.5rem;
+        }
+
+        .nav-tabs-custom {
+            border: none;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            margin: 0.5rem 1rem 1rem;
+            padding: 3px;
+        }
+
+        .nav-tabs-custom .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            border: none;
+            padding: 0.5rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .nav-tabs-custom .nav-link.active {
+            background: white;
+            color: var(--tblr-primary);
+            border-radius: 9px;
+        }
+
+        .date-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 8px 6px;
+            margin-top: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 25px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 1050;
+            border: none;
+        }
+
+        .card-trx {
+            border-radius: 12px;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+            margin-top: 6px;
+        }
+
+        .card-trx.out {
+            border-left: 4px solid #d63939;
+        }
+
+        .card-trx.in {
+            border-left: 4px solid #2fb444;
+        }
+
+        .avatar-trx {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .bg-out {
+            background: #fff5f5;
+            color: #d63939;
+        }
+
+        .bg-in {
+            background: #f0fdf4;
+            color: #2fb444;
+        }
+
+        .top-methods-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .top-methods-grid .btn {
+            font-size: 0.6rem;
+            padding: 10px 2px;
+            height: 44px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f6f8fb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .login-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="login-overlay">
+        <div class="login-card">
+            <h3 class="text-center mb-4 fw-bold text-primary">Login DompetKu</h3>
+            <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="nama@email.com" required autocomplete="username">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-control" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">LOGIN</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="loading-overlay">
+        <div class="spinner-border text-primary"></div>
+    </div>
+
+    <div class="header-fixed" id="mainHeader">
+        <div class="header-content">
+            <div class="d-flex justify-content-between align-items-center mb-3" id="headerNav" style="display:none !important;">
+                <h4 class="mb-0 fw-bold m-0">DompetKu</h4>
+                <button class="btn btn-light fw-bold text-primary rounded-pill px-3 shadow-sm" onclick="handleLogout()">Logout</button>
+            </div>
+            <div id="statsContainer" class="stats-grid out"></div>
+        </div>
+        <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+            <li class="nav-item"><a href="#tab-out" class="nav-link active" data-bs-toggle="tab"
+                    onclick="switchTab('out')">PENGELUARAN</a></li>
+            <li class="nav-item"><a href="#tab-in" class="nav-link" data-bs-toggle="tab"
+                    onclick="switchTab('in')">PENDAPATAN</a></li>
+        </ul>
+    </div>
+
+    <div class="container-xl pt-2">
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-out">
+                <div id="listOut"></div>
+            </div>
+            <div class="tab-pane fade" id="tab-in">
+                <div id="listIn"></div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary fab" data-bs-toggle="modal" data-bs-target="#modalInput" onclick="prepareModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+    </button>
+
+    <div class="modal modal-blur fade" id="modalInput" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <form id="trxForm" onsubmit="handleTrxSubmit(event)">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold">Tambah Transaksi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body pt-2">
+                        <div class="form-selectgroup form-selectgroup-boxes d-flex mb-3">
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="radio" name="trx_type" value="out" class="form-selectgroup-input" checked>
+                                <span class="form-selectgroup-label d-flex align-items-center p-2">💸 Pengeluaran</span>
+                            </label>
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="radio" name="trx_type" value="in" class="form-selectgroup-input">
+                                <span class="form-selectgroup-label d-flex align-items-center p-2">💰 Pendapatan</span>
+                            </label>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6"><label class="form-label small text-muted">Tanggal</label><input
+                                    type="date" id="tanggal" class="form-control" required></div>
+                            <div class="col-6">
+                                <label class="form-label small text-muted">Keterangan/Toko</label>
+                                <select id="vendor_select" class="form-select" required onchange="handleVendorChange()">
+                                    <option value="" disabled selected>Pilih Vendor...</option>
+                                    <option value="__NEW__" class="fw-bold text-primary">+ Tambah Vendor Baru</option>
+                                </select>
+                                <input type="text" id="vendor_new" class="form-control mt-1"
+                                    placeholder="Nama vendor baru" style="display:none;">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-primary mb-1">Nominal (Rp)</label>
+                            <input type="text" id="nominal_display" inputmode="numeric"
+                                class="form-control form-control-lg fw-bold text-primary" placeholder="0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold mb-1">Metode Pembayaran</label>
+                            <div class="top-methods-grid" id="topGrid"></div>
+                            <select class="form-select other-select" id="otherSelect"></select>
+                        </div>
+                        <div class="mb-0"><textarea id="keterangan" class="form-control" rows="1"
+                                placeholder="Catatan opsional"></textarea></div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2">SIMPAN</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal modal-blur fade" id="modalDetail" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg rounded-4 text-center">
+                <div class="modal-body py-4" id="detailContent"></div>
+                <div class="modal-footer border-0 p-2 d-flex">
+                    <input type="hidden" id="detId">
+                    <button type="button" class="btn btn-warning flex-fill fw-bold me-2"
+                        onclick="handleEditDetail()">EDIT</button>
+                    <button type="button" class="btn btn-danger flex-fill fw-bold"
+                        onclick="handleDeleteDetail()">HAPUS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    
+    <script>
+        // --- KONFIGURASI SUPABASE ---
+const SUPABASE_URL = 'https://dlrgesieqkacbleocctd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRscmdlc2llcWthY2JsZW9jY3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0MDIxNTIsImV4cCI6MjA5OTk3ODE1Mn0.R6DFLdyiBRUevOAXyyFZRpeDPf4wUBzRkuIilkzVtJU';
+
+// Gunakan nama variabel 'supabaseClient' agar tidak bentrok dengan variabel global CDN
+let supabaseClient = null;
+
+try {
+    if (window.supabase) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+        console.error("Library Supabase SDK gagal dimuat dari CDN.");
+    }
+} catch (err) {
+    console.error("Gagal menginisialisasi Supabase:", err.message);
+}
+
+let vendorsData = [];
+let vendorSelectTs = null;
+let currentTab = 'out';
+const allMethods = ["Cash", "Gopay", "OVO", "BCA", "Mandiri", "Nobu", "Jenius", "Dana", "BRI", "Seabank", "Shopeepay", "BNI", "Bank Jateng"];
+let modalDetailObj = null;
+
+const showLoading = (show) => document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+
+// --- AUTHENTICATION HANDLERS ---
+async function handleLoginSubmit(e) {
+    if (e) e.preventDefault();
+    
+    if (!supabaseClient) {
+        alert('Supabase SDK belum siap. Pastikan SUPABASE_URL dan SUPABASE_ANON_KEY sudah diisi dengan benar.');
+        return;
+    }
+
+    showLoading(true);
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            alert('Login gagal: ' + error.message);
+        } else {
+            await checkAuthSession();
+        }
+    } catch (err) {
+        alert('Terjadi kesalahan sistem: ' + err.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function handleLogout() {
+    if (!confirm('Apakah Anda yakin ingin logout?')) return;
+    showLoading(true);
+    try {
+        if (supabaseClient) await supabaseClient.auth.signOut();
+        await checkAuthSession();
+    } catch (err) {
+        alert('Gagal logout: ' + err.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function checkAuthSession() {
+    if (!supabaseClient) return;
+    
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('headerNav').style.setProperty('display', 'flex', 'important');
+            await fetchVendors();
+            await display();
+        } else {
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('headerNav').style.setProperty('display', 'none', 'important');
+        }
+    } catch (err) {
+        console.error("Gagal memeriksa sesi auth:", err.message);
+    }
+}
+
+// --- VENDORS LOGIC ---
+async function fetchVendors() {
+    if (!supabaseClient) return;
+    try {
+        const { data, error } = await supabaseClient
+            .from('vendors')
+            .select('*')
+            .order('current_name', { ascending: true });
+
+        if (error) throw error;
+        vendorsData = data || [];
+
+        if (!vendorSelectTs) {
+            vendorSelectTs = new TomSelect('#vendor_select', {
+                create: false,
+                sortField: { field: "text", direction: "asc" },
+                onChange: handleVendorChange
+            });
+        }
+
+        vendorSelectTs.clearOptions();
+        vendorSelectTs.addOption({ value: '__NEW__', text: '+ Tambah Vendor Baru' });
+        vendorsData.forEach(v => {
+            vendorSelectTs.addOption({ value: v.id, text: v.current_name });
+        });
+        vendorSelectTs.refreshOptions(false);
+    } catch (err) {
+        console.error("Gagal memuat daftar vendor:", err.message);
+    }
+}
+
+function handleVendorChange() {
+    const select = document.getElementById('vendor_select');
+    const newVendorInput = document.getElementById('vendor_new');
+    if (select.value === '__NEW__') {
+        newVendorInput.style.display = 'block';
+        newVendorInput.required = true;
+        setTimeout(() => newVendorInput.focus(), 100);
+    } else {
+        newVendorInput.style.display = 'none';
+        newVendorInput.required = false;
+    }
+}
+
+function switchTab(tab) { currentTab = tab; display(); }
+
+function getStats() {
+    let s = JSON.parse(localStorage.getItem('payStats')) || {};
+    allMethods.forEach(m => { if (!s[m]) s[m] = 0; });
+    return s;
+}
+
+function prepareModal() {
+    document.getElementById('trxForm').reset();
+    delete document.getElementById('trxForm').dataset.editId;
+    document.getElementById('vendor_new').style.display = 'none';
+    document.querySelector(`input[name="trx_type"][value="${currentTab}"]`).checked = true;
+    document.getElementById('tanggal').value = localStorage.getItem('lastDate') || new Date().toISOString().split('T')[0];
+    if (vendorSelectTs) vendorSelectTs.clear();
+    renderHybridSelector();
+}
+
+function renderHybridSelector() {
+    const s = getStats();
+    const sorted = [...allMethods].sort((a, b) => s[b] - s[a]);
+    const top4 = sorted.slice(0, 4);
+    const others = sorted.slice(4);
+    document.getElementById('topGrid').innerHTML = top4.map((m, i) => `
+        <input type="radio" class="btn-check" name="pay_rad" id="t${i}" value="${m}" ${i === 0 ? 'checked' : ''}>
+        <label for="t${i}" class="btn btn-outline-primary" onclick="document.getElementById('otherSelect').selectedIndex=0">${m}</label>
+    `).join('');
+    document.getElementById('otherSelect').innerHTML = '<option value="" selected disabled>— Lainnya —</option>' + others.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+document.getElementById('nominal_display').addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, "");
+    this.value = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+});
+
+// --- TRANSACTIONS CRUD ---
+async function handleTrxSubmit(e) {
+    if (e) e.preventDefault();
+    if (!supabaseClient) return;
+
+    showLoading(true);
+
+    let vendorId = document.getElementById('vendor_select').value;
+    const newVendorName = document.getElementById('vendor_new').value.trim();
+
+    if (vendorId === '__NEW__') {
+        if (!newVendorName) {
+            alert('Nama vendor baru tidak boleh kosong!');
+            showLoading(false);
+            return;
+        }
+        try {
+            const now = new Date().toISOString().split('T')[0];
+            const vendorPayload = {
+                current_name: newVendorName,
+                name_history: JSON.stringify([{ name: newVendorName, start_date: now, end_date: null }])
+            };
+
+            const { data: newVendor, error: vErr } = await supabaseClient
+                .from('vendors')
+                .insert([vendorPayload])
+                .select()
+                .single();
+
+            if (vErr) throw vErr;
+            vendorId = newVendor.id;
+            await fetchVendors();
+        } catch (err) {
+            alert("Error saat menyimpan vendor baru: " + err.message);
+            showLoading(false);
+            return;
+        }
+    }
+
+    const finalM = document.getElementById('otherSelect').value || document.querySelector('input[name="pay_rad"]:checked')?.value;
+    const trxData = {
+        type: document.querySelector('input[name="trx_type"]:checked').value,
+        tanggal: document.getElementById('tanggal').value,
+        vendor_id: parseInt(vendorId),
+        nominal: parseFloat(document.getElementById('nominal_display').value.replace(/\./g, "")),
+        payment_method: finalM,
+        keterangan: document.getElementById('keterangan').value
+    };
+
+    const editId = document.getElementById('trxForm').dataset.editId;
+
+    try {
+        let error = null;
+        if (editId) {
+            const res = await supabaseClient.from('transactions').update(trxData).eq('id', editId);
+            error = res.error;
+        } else {
+            const res = await supabaseClient.from('transactions').insert([trxData]);
+            error = res.error;
+        }
+
+        if (!error) {
+            let s = getStats(); s[finalM]++; localStorage.setItem('payStats', JSON.stringify(s));
+            localStorage.setItem('lastDate', trxData.tanggal);
+            if (vendorSelectTs) vendorSelectTs.clear();
+            document.getElementById('vendor_new').value = "";
+            document.getElementById('vendor_new').style.display = 'none';
+            document.getElementById('nominal_display').value = "";
+            document.getElementById('keterangan').value = "";
+            bootstrap.Modal.getInstance(document.getElementById('modalInput')).hide();
+            await display();
+        } else {
+            alert("Gagal menyimpan ke Supabase: " + error.message);
+        }
+    } catch (err) { 
+        alert("Gagal Simpan: " + err.message); 
+    } finally { 
+        showLoading(false); 
+    }
+}
+
+async function display() {
+    if (!supabaseClient) return;
+    showLoading(true);
+    try {
+        const { data: records, error } = await supabaseClient
+            .from('transactions')
+            .select('*')
+            .order('tanggal', { ascending: false })
+            .order('id', { ascending: false });
+
+        if (error) throw error;
+
+        const listOut = document.getElementById('listOut');
+        const listIn = document.getElementById('listIn');
+        const statsCont = document.getElementById('statsContainer');
+
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        const startW = new Date(now.setDate(now.getDate() - (now.getDay() || 7) + 1)).toISOString().split('T')[0];
+        const startM = new Date().toISOString().substring(0, 7) + "-01";
+
+        let expH = 0, expW = 0, expM = 0, incM = 0;
+        let groupData = { out: {}, in: {} };
+
+        (records || []).forEach(it => {
+            const nom = parseFloat(it.nominal);
+            if (it.type === 'out') {
+                if (it.tanggal === todayStr) expH += nom;
+                if (it.tanggal >= startW) expW += nom;
+                if (it.tanggal >= startM) expM += nom;
+            } else if (it.tanggal >= startM) { incM += nom; }
+
+            if (!groupData[it.type][it.tanggal]) groupData[it.type][it.tanggal] = { total: 0, items: [] };
+            groupData[it.type][it.tanggal].total += nom;
+
+            const vendorObj = vendorsData.find(v => v.id == it.vendor_id);
+            it.vendor_name = vendorObj ? vendorObj.current_name : (it.vendor_id ? `Vendor ID: ${it.vendor_id}` : 'Tidak diketahui');
+
+            groupData[it.type][it.tanggal].items.push(it);
+        });
+
+        renderGroups('out', listOut, groupData.out);
+        renderGroups('in', listIn, groupData.in);
+
+        if (currentTab === 'out') {
+            statsCont.className = "stats-grid out";
+            statsCont.innerHTML = `
+                <div class="stat-item"><div class="stat-label">Hari Ini</div><div class="stat-value">Rp ${expH.toLocaleString('id-ID')}</div></div>
+                <div class="stat-item"><div class="stat-label">Minggu Ini</div><div class="stat-value">Rp ${expW.toLocaleString('id-ID')}</div></div>
+                <div class="stat-item"><div class="stat-label">Bulan Ini</div><div class="stat-value">Rp ${expM.toLocaleString('id-ID')}</div></div>`;
+        } else {
+            statsCont.className = "stats-grid in";
+            statsCont.innerHTML = `<div class="stat-item"><div class="stat-label">Total Pendapatan Bulan Ini</div><div class="stat-value large">Rp ${incM.toLocaleString('id-ID')}</div></div>`;
+        }
+    } catch (err) { 
+        console.error("Fetch error:", err.message); 
+    } finally { 
+        showLoading(false); 
+    }
+}
+
+function renderGroups(type, container, data) {
+    container.innerHTML = "";
+    const sortedDates = Object.keys(data).sort().reverse();
+    if (sortedDates.length === 0) {
+        container.innerHTML = "<div class='text-center py-5 text-muted small'>Tidak ada data</div>";
+        return;
+    }
+    sortedDates.forEach(date => {
+        let html = `<div class="date-group-header"><span>${date}</span><span>Rp ${data[date].total.toLocaleString('id-ID')}</span></div>`;
+        data[date].items.forEach(it => {
+            html += `
+                <div class="card card-trx ${it.type}" onclick="showDetail(${JSON.stringify(it).replace(/"/g, '&quot;')})">
+                    <div class="card-body d-flex align-items-center p-2">
+                        <div class="avatar-trx me-3 ${it.type === 'in' ? 'bg-in' : 'bg-out'}">${it.type === 'in' ? '↓' : '↑'}</div>
+                        <div class="flex-fill overflow-hidden">
+                            <div class="fw-bold text-dark text-truncate small mb-0">${it.vendor_name}</div>
+                            <div class="text-muted" style="font-size: 0.55rem;">${it.payment_method} - ${it.keterangan || ''}</div>
+                        </div>
+                        <div class="text-end fw-bold ${it.type === 'in' ? 'text-success' : 'text-danger'}" style="font-size: 0.8rem;">
+                            ${it.type === 'in' ? '+' : '-'} ${parseFloat(it.nominal).toLocaleString('id-ID')}
+                        </div>
+                    </div>
+                </div>`;
+        });
+        container.innerHTML += html;
+    });
+}
+
+let currentEditObj = null;
+
+window.showDetail = (obj) => {
+    currentEditObj = obj;
+    document.getElementById('detailContent').innerHTML = `
+        <div class="h2 ${obj.type === 'in' ? 'text-success' : 'text-danger'} fw-bold mb-3">Rp ${parseFloat(obj.nominal).toLocaleString('id-ID')}</div>
+        <div class="text-start small bg-light p-3 rounded-3">
+            <div class="mb-1"><strong>Keterangan:</strong> ${obj.vendor_name}</div>
+            <div class="mb-1"><strong>Tanggal:</strong> ${obj.tanggal}</div>
+            <div class="mb-1"><strong>Metode:</strong> ${obj.payment_method}</div>
+            <div class="mb-0"><strong>Catatan:</strong> ${obj.keterangan || '-'}</div>
+        </div>`;
+    document.getElementById('detId').value = obj.id;
+    modalDetailObj.show();
+};
+
+window.handleEditDetail = () => {
+    modalDetailObj.hide();
+
+    document.querySelector(`input[name="trx_type"][value="${currentEditObj.type}"]`).checked = true;
+    document.getElementById('tanggal').value = currentEditObj.tanggal;
+
+    if (vendorSelectTs) {
+        vendorSelectTs.setValue(currentEditObj.vendor_id);
+    } else {
+        document.getElementById('vendor_select').value = currentEditObj.vendor_id;
+    }
+    document.getElementById('vendor_new').style.display = 'none';
+
+    let nominalStr = parseFloat(currentEditObj.nominal).toString();
+    document.getElementById('nominal_display').value = nominalStr.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    document.getElementById('keterangan').value = currentEditObj.keterangan || "";
+
+    renderHybridSelector();
+
+    let foundInRad = false;
+    document.querySelectorAll('input[name="pay_rad"]').forEach(rad => {
+        if (rad.value === currentEditObj.payment_method) {
+            rad.checked = true;
+            foundInRad = true;
+        }
+    });
+    if (!foundInRad) {
+        document.getElementById('otherSelect').value = currentEditObj.payment_method;
+    } else {
+        document.getElementById('otherSelect').selectedIndex = 0;
+    }
+
+    document.getElementById('trxForm').dataset.editId = currentEditObj.id;
+    new bootstrap.Modal('#modalInput').show();
+};
+
+window.handleDeleteDetail = async () => {
+    if (!confirm('Hapus selamanya dari Supabase?')) return;
+    showLoading(true);
+    const id = document.getElementById('detId').value;
+    try {
+        const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
+        if (error) throw error;
+        modalDetailObj.hide();
+        await display();
+    } catch (err) { 
+        alert("Gagal Hapus: " + err.message); 
+    } finally { 
+        showLoading(false); 
+    }
+};
+
+// --- INIT ON LOAD ---
+window.onload = async () => {
+    modalDetailObj = new bootstrap.Modal('#modalDetail');
+    document.getElementById('tanggal').value = localStorage.getItem('lastDate') || new Date().toISOString().split('T')[0];
+    
+    await checkAuthSession();
+
+    if (supabaseClient) {
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            checkAuthSession();
+        });
+    }
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+            console.log('ServiceWorker registration successful');
+        }).catch((err) => {
+            console.log('ServiceWorker registration failed: ', err);
+        });
+    }
+};
+    </script>
+</body>
+
+</html>
