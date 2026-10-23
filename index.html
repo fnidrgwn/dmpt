@@ -599,7 +599,8 @@ async function display() {
             .from('transactions')
             .select('*')
             .order('tanggal', { ascending: false })
-            .order('id', { ascending: false });
+            .order('id', { ascending: false })
+            .limit(200);
 
         if (error) throw error;
 
